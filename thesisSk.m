@@ -142,3 +142,6 @@ eval(h)
 
 save('Kinematics.mat','JA','T','h')
 
+
+%% Kinematics Other robot parts
+
