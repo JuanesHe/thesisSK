@@ -3,7 +3,9 @@ close all
 clear all
 
 load('Kinematics.mat')
+Vmax = [ 98 98 100 130 140 180 180] *2*pi/360;
 
+%%
 q = eps*ones(1,7);
 q1 = q(1);
 q2 = q(2);
@@ -113,14 +115,15 @@ eh(:,1) = [0;0;0];
 Q(1,:) = q;
 
 %%
-damp =0.1;
+damp =1;
 kd = 1;
 i = 2;
 m = 1;
-dt = 0.1;
-tau = 7;
-do = 0.3;
-for i=2:1:10
+dt = 0.01;
+tau = 0.1;
+do = 0.4;
+
+for i=2:1:500
     q1 = q(1);
     q2 = q(2);
     q3 = q(3);
@@ -155,7 +158,7 @@ for i=2:1:10
     plan = cross(dactualgoal, dobsgoal);
     plan = plan/ norm(plan);
     force = cross( Fk,plan );
-    Ft = Fk + force;
+    Ft = force + 0.025* Fk;
     
     Fk1(:,i-1) = Fk/norm(Fk);
     Ft1(:,i-1) = Ft/norm(Ft);
@@ -170,6 +173,12 @@ for i=2:1:10
     else
         C = J.' *s ;
     end
+    for ia = 1:1:7
+        if C(ia,1) >= Vmax(ia)
+            C(ia,1) = Vmax(ia);
+        end
+    end
+    C
         q = q + dt*C.';
         Q(i,:) = q;    
 end
