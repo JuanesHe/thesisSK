@@ -113,13 +113,12 @@ eh(:,1) = [0;0;0];
 Q(1,:) = q;
 
 %%
-damp =0.1;
-kd = 1;
+damp =1;
+kd = 200;
 i = 2;
 m = 1;
 dt = 0.1;
 tau = 7;
-do = 0.3;
 for i=2:1:10
     q1 = q(1);
     q2 = q(2);
@@ -147,24 +146,19 @@ for i=2:1:10
     v = H(:,i) - H(:,i-1);
     ur = d/norm(d);
     Fd = -damp*(v'*ur)*ur;
-    Fk = -kd*ur*(1/(norm(d)^2) )
-    
-    
+    Fk = -kd*ur/norm(d);
+    norm(d)
+    norm(Fk)
     dobsgoal = hd - pointL;
     dactualgoal = hq - hd;
     plan = cross(dactualgoal, dobsgoal);
     plan = plan/ norm(plan);
-    force = cross( Fk,plan );
+    force = cross(plan, Fk );
     Ft = Fk + force;
-    
-    Fk1(:,i-1) = Fk/norm(Fk);
-    Ft1(:,i-1) = Ft/norm(Ft);
-    d1(:,i-1) = d/norm(d);
-    da(:,i-1) = dactualgoal / norm(dactualgoal);
     a = Ft/m;
     vf = v + a *dt;
     
-    if norm(d)< do
+    if norm(d)< 0.3
         C = J.' * ((1- exp(-tau*norm(d)))*s +  exp(-tau*norm(d))*vf);
      %   norm(d)
     else
@@ -228,16 +222,3 @@ end
 
 plot3(H(1,:),H(2,:),H(3,:))
 hold off
-
-%%
-j = 4
-Fkgra = [zeros(3,1),Fk1(:,j)];
-Ftgra = [zeros(3,1),Ft1(:,j)];
-dgra = [zeros(3,1),d1(:,j)];
-da1 = [zeros(3,1),da(:,j)];
-figure
-hold on
-plot3(Fkgra(1,:),Fkgra(2,:),Fkgra(3,:)) 
-plot3(Ftgra(1,:),Ftgra(2,:),Ftgra(3,:)) 
-plot3(dgra(1,:),dgra(2,:),dgra(3,:)) 
-plot3(da1(1,:),da1(2,:),da1(3,:)) 
