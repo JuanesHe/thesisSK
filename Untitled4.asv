@@ -167,10 +167,10 @@ for i=2:1:500
     a = Ft/m;
     vf = v + a *dt;
     
-    angle(i-1) = acos(dot(  d , -dactualgoal ) / (norm(d)*norm(dactualgoal)));
+    angle(i) = acos(dot(  d , -dactualgoal ) / (norm(d)*norm(dactualgoal)))
     
     if norm(d)< do
-        if angle(i-1) < 90*pi/180
+        if angle > 80*pi/180
         C = J.' * ((1- exp(-tau*norm(d)))*s +  exp(-tau*norm(d))*vf);
      %   norm(d)
         end
