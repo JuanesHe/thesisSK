@@ -182,8 +182,8 @@ for i=2:1:500
             C(ia,1) = Vmax(ia);
         end
     end
-    C
-        q = q + dt*C.';
+    
+       q = q + dt*C.';
         Q(i,:) = q;    
 end
 
