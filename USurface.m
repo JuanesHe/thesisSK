@@ -47,12 +47,15 @@ Q(1,:) = q;
 
 %%
 damp =1;
-kd = 1;
+kd = 10;
 i = 2;
 m = 1;
 dt = 0.01;
 tau = 0.1;
 do = 0.1;
+obstacle = 0;
+
+
 
 for i=2:1:500
     q1 = q(1);
@@ -74,55 +77,107 @@ for i=2:1:500
     J = J2 * JA1.' ;
     s = hdp + hv;
     %Jinv = pinv(JA1)
+    C = zeros(3,1);
+    
+    Ca = zeros(3,1);
+    Ct = s;
 
-    Cc = zeros(3,1);
-    Cf = zeros(3,1);
     pointLa = [x.';y.';z.'];
     distances = pointLa - hq;
     abd = sqrt(distances(1,:).^2 + distances(2,:).^2  + distances(3,:).^2 ) ;
-    nmax = find(abd == min(abd));
-    
-   for avi = 1:1: length(nmax)
-        
-        pointL = [x(nmax(avi));y(nmax(avi));z(nmax(avi))];
-        %Force
-        d = pointL - hq;
-        v = H(:,i) - H(:,i-1);
-        ur = d/norm(d);
-        Fd = -damp*(v'*ur)*ur;
-        Fk = -kd*ur*(1/(norm(d)^2) );
+    nmin = find(abd == min(abd));
+   
+    if abd(nmin(1)) > do
+        % collision
+        if obstacle == 0
 
+           Obs = [x(min(1));y(min(1));z(nmin(1))];
+           Por = Obs - hq;
+           Pgr = hd - hq;
+           Ang = acos(dot(  Por , Pgr ) / (norm(Por)*norm(Pgr)));
+           
+           if Ang < 120*pi/180
+              %new collision
+               obstacle = 1;
+               Po = Obs;
+               nrg = (hd - hq)/ norm(hd - hq);
+               nro = (Po - hq)/norm(Po - hq);
+               a = cross(nro,nrg);
+               b = cross(a , nro);
+            
+               v = (H(:,i) - H(:,i-1))/dt ;
+               ur = Por/norm(Por);
+               Fd = -damp*(v'*ur)*ur;
+               Fk = -kd*ur*(1/(norm(Por)^2) )
+               Ft = b * norm(Fk) + Fk;
+               a = Ft/m;
+               vf = v + a *dt;
+               Ca = vf;
+               
+               ba = b;
+               Poa = Po;
+               
+           else
+               
+               % no collision
 
-        dobsgoal = hd - pointL;
-        dactualgoal = hq - hd;
-        plan = cross(dactualgoal, dobsgoal);
-        plan = plan/ norm(plan);
-        force = cross( plan, Fk );
-        Ft = force + Fk ;
-
-        Fk1(:,i-1) = Fk/norm(Fk);
-        Ft1(:,i-1) = Ft/norm(Ft);
-        d1(:,i-1) = d/norm(d);
-        da(:,i-1) = dactualgoal / norm(dactualgoal);
-        a = Ft/m;
-        vf = v + a *dt;
-
-        angle(i-1) = acos(dot(  d , -dactualgoal ) / (norm(d)*norm(dactualgoal)));
-
-        if norm(d)< do
-            if angle(i-1) < 90*pi/180
-               Cc = Cc +  ((1- exp(-tau*norm(d)))*s );
-               Cf = Cf +  ( exp(-tau*norm(d))*vf);
-            else
-                Cc = Cc + s;
-            end
+           end
+          
+            
         else
-            Cc = Cc + s;
+           
+            
+           for i_aux = 1:1:length(nmin)
+
+
+               Obs = [x(nmin((i_aux)));y(nmin((i_aux)));z(nmin((i_aux)))];
+               Por = Obs - hq;
+               Pgr = hd - hq;
+               Ang = acos(dot(  Por , Pgr ) / (norm(Por)*norm(Pgr)));
+
+
+               if Ang < 120*pi/180
+                  %new collision
+                   obstacle = 1;
+                   Po = Obs;
+                   nrg = (hd - hq)/ norm(hd - hq);
+                   nro = (Po - hq)/norm(Po - hq);
+                   a = cross(nro,nrg);
+                   b = cross(a , nro);
+                   Angb = acos(dot(  b , ba ) / (norm(b)*norm(ba)));
+                   
+                   if Angb > 90*pi/180
+                         b = cross(nro , a );
+                   end
+        
+                   v = (H(:,i) - H(:,i-1))/dt ;
+                   ur = Por/norm(Por);
+                   Fd = -damp*(v'*ur)*ur;
+                   Fk = -kd*ur*(1/(norm(Por)^2) )
+                   Ft = b * norm(Fk) + Fk;
+                   a = Ft/m;
+                   vf = v + a *dt;
+                   Ca = Ca + vf;
+
+                   ba = b;
+                   Poa = Po;
+               end
+           end  
+           
         end
+    else
+        % no colision 
+        
+        if obstacle == 1
+           obstacle = 0; 
+        end
+    end
+    
+    
 
     
-    end
-        C = J.'*(Cc + Cf);
+   
+        C = J.'*(Ct + Ca);
         for ia = 1:1:7
             if C(ia,1) >= Vmax(ia)
                 C(ia,1) = Vmax(ia);
