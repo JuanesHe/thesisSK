@@ -3,17 +3,17 @@ close all
 clear all
 
 load('Kinematics.mat')
-Vmax = [ 98 98 100 130 140 180 180] *2*pi/360;
+Vmax = 0.6*[ 98 98 100 130 140 180 180] *2*pi/360;
 
 %%
 theta = linspace(0,pi,180);
-phi = linspace(0,pi,10);
-r = 0.1;
-xo = 0.476;
-yo = 0.315;
+phi = linspace(0,pi,180);
+r = 0.2;
+xo = -0.476;
+yo = 0.315; 
 zo = 1.04;
 
-for i=1:1: length(theta)
+for i=1:1: 200
     for j=1:1: length(phi)
         x((i-1)*length(phi) + j,1) = r * cos(theta(i))*sin(phi(j)) + xo;
         y((i-1)*length(phi) + j,1) = r * sin(theta(i))*sin(phi(j)) + yo;
@@ -34,7 +34,7 @@ q5 = q(5);
 q6 = q(6);
 q7 = q(7);
 hq = eval(h);
-hd = [0.5;0.5;0.5];
+hd = [-0.5;0.5;0.5];
 hdp = 0;
 k1 = [5;5;5];
 k2 = [1;1;1];
@@ -47,17 +47,19 @@ Q(1,:) = q;
 
 %%
 damp =1;
-kd = 10;
+kd1 = 1;
+kd2 = 0.2;
+kd3 = 0.8;
 i = 2;
-m = 1;
+m = 5;
 dt = 0.01;
 tau = 0.1;
-do = 0.1;
+do = 0.15;
 obstacle = 0;
 
 
 
-for i=2:1:500
+for i=2:1:1000
     q1 = q(1);
     q2 = q(2);
     q3 = q(3);
@@ -85,31 +87,35 @@ for i=2:1:500
     pointLa = [x.';y.';z.'];
     distances = pointLa - hq;
     abd = sqrt(distances(1,:).^2 + distances(2,:).^2  + distances(3,:).^2 ) ;
-    nmin = find(abd == min(abd));
+    nmin = find(abd == min(abd))
    
-    if abd(nmin(1)) > do
+    if abd(nmin(1)) < do
         % collision
         if obstacle == 0
 
            Obs = [x(min(1));y(min(1));z(nmin(1))];
            Por = Obs - hq;
            Pgr = hd - hq;
-           Ang = acos(dot(  Por , Pgr ) / (norm(Por)*norm(Pgr)));
+           nv = (H(:,i) - H(:,i-1))/ norm(H(:,i) - H(:,i-1));
+           Ang = acos(dot(  Por , nv ) / (norm(Por)*norm(nv)));
            
-           if Ang < 120*pi/180
+           if Ang < 90*pi/180
               %new collision
                obstacle = 1;
                Po = Obs;
                nrg = (hd - hq)/ norm(hd - hq);
+               nv = (H(:,i) - H(:,i-1))/ norm(H(:,i) - H(:,i-1));
                nro = (Po - hq)/norm(Po - hq);
-               a = cross(nro,nrg);
+               a = cross(nro,nv);
                b = cross(a , nro);
+               a1 = cross(nro,nrg);
+               b1 = cross(a1 , nro);
             
                v = (H(:,i) - H(:,i-1))/dt ;
                ur = Por/norm(Por);
                Fd = -damp*(v'*ur)*ur;
-               Fk = -kd*ur*(1/(norm(Por)^2) )
-               Ft = b * norm(Fk) + Fk;
+               Fk = -ur*(1/(norm(Por)^4) );
+               Ft = b * kd1* norm(Fk) + kd2* Fk + b1 * kd3*norm(Fk);
                a = Ft/m;
                vf = v + a *dt;
                Ca = vf;
@@ -133,17 +139,23 @@ for i=2:1:500
                Obs = [x(nmin((i_aux)));y(nmin((i_aux)));z(nmin((i_aux)))];
                Por = Obs - hq;
                Pgr = hd - hq;
-               Ang = acos(dot(  Por , Pgr ) / (norm(Por)*norm(Pgr)));
+               nv = (H(:,i) - H(:,i-1))/ norm(H(:,i) - H(:,i-1));
+               Ang = acos(dot(  Por , Pgr ) / (norm(Por)*norm(Pgr)))
 
 
-               if Ang < 120*pi/180
+               if Ang < 90*pi/180
                   %new collision
                    obstacle = 1;
                    Po = Obs;
                    nrg = (hd - hq)/ norm(hd - hq);
+                   nv = (H(:,i) - H(:,i-1))/ norm(H(:,i) - H(:,i-1));
                    nro = (Po - hq)/norm(Po - hq);
-                   a = cross(nro,nrg);
+                   a = cross(nro,nv);
                    b = cross(a , nro);
+                   a1 = cross(nro,nrg);
+                   b1 = cross(a1 , nro);
+                   
+                   
                    Angb = acos(dot(  b , ba ) / (norm(b)*norm(ba)));
                    
                    if Angb > 90*pi/180
@@ -153,18 +165,24 @@ for i=2:1:500
                    v = (H(:,i) - H(:,i-1))/dt ;
                    ur = Por/norm(Por);
                    Fd = -damp*(v'*ur)*ur;
-                   Fk = -kd*ur*(1/(norm(Por)^2) )
-                   Ft = b * norm(Fk) + Fk;
+                   Fk = -ur*(1/(norm(Por)^4) );
+                   Ft = b * kd1*norm(Fk) + kd2*Fk + b1 * kd3*norm(Fk);
                    a = Ft/m;
                    vf = v + a *dt;
                    Ca = Ca + vf;
 
-                   ba = b;
-                   Poa = Po;
+
                end
+               
            end  
            
+           
+           ba = b;
+        
+           Poa = Po;
         end
+        
+        
     else
         % no colision 
         
@@ -173,7 +191,8 @@ for i=2:1:500
         end
     end
     
-    
+    plot3(H(1,:),H(2,:),H(3,:))
+plot3(x,y,z,'o')
 
     
    

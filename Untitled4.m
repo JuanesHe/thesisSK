@@ -229,8 +229,11 @@ show(lbr, Q(1,:), 'PreservePlot', false);
 hold on
 exampleHelperPlotCupAndTable(cupHeight, cupRadius, cupPosition);
 plot3(pointL(1,1),pointL(2,1),pointL(3,1),'o')
+plot3(H(1,:),H(2,:),H(3,:))
+plot3(x,y,z,'o')
+
 %%
-framerate = 15;
+framerate = 100;
 r = robotics.Rate(framerate);
 hold on
 for k = 1:size(Q,1)
