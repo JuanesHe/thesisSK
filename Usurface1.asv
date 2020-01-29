@@ -6,8 +6,8 @@ load('Kinematics.mat')
 Vmax = 0.6*[ 98 98 100 130 140 180 180] *2*pi/360;
 
 %%
-theta = linspace(0,pi,1);
-phi = linspace(0,pi,1);
+theta = linspace(0*pi/180,300*pi/180,180);
+phi = linspace(0,pi,180);
 r = 0.2;
 xo = -0.476;
 yo = 0.315; 
@@ -48,12 +48,12 @@ Q(1,:) = q;
 %%
 damp =1;
 kd1 = 0.5;
-kd2 = 0.2;
+kd2 = 0.4;
 kd3 = 0.8;
 i = 2;
 m = 5;
 dt = 0.01;
-tau = 0.1;
+tau = 0.01;
 do = 0.15;
 obstacle = 0;
 
@@ -87,22 +87,52 @@ for i=2:1:1000
     pointLa = [x.';y.';z.'];
     distances = pointLa - hq;
     abd = sqrt(distances(1,:).^2 + distances(2,:).^2  + distances(3,:).^2 ) ;
-    nmin = find(abd == min(abd))
+    nmin = find( abd < do );
    
-    if abd(nmin(1)) < do
-        % collision
-        if obstacle == 0
-
-           Obs = [x(min(1));y(min(1));z(nmin(1))];
+    if find( abd < do )
+        % collission condition 1
+        dmin = abd(find( abd == min(abd) ));
+        for cont_obs = 1:1: length(nmin)
+           Obs = [x(min(cont_obs));y(min(cont_obs));z(nmin(cont_obs))];
            Por = Obs - hq;
            Pgr = hd - hq;
            nv = (H(:,i) - H(:,i-1))/ norm(H(:,i) - H(:,i-1));
            Ang = acos(dot(  Por , nv ) / (norm(Por)*norm(nv)));
-           
            if Ang < 90*pi/180
-              %new collision
-               obstacle = 1;
+              % collision 1
+            
                Po = Obs;
+               nrg = (hd - hq)/ norm(hd - hq);
+               nv = (H(:,i) - H(:,i-1))/ norm(H(:,i) - H(:,i-1));
+               nro = (Po - hq)/norm(Po - hq);
+               
+               a = cross(nro,nv);
+               b = cross(a , nro);
+               a1 = cross(nro,nrg);
+               b1 = cross(a1 , nro);
+               
+               if obstacle == 1
+                   
+               
+               else
+                  obstacle = 0;
+               end
+            
+               v = (H(:,i) - H(:,i-1))/dt ;
+               ur = Por/norm(Por);
+               Fd = -damp*(v'*ur)*ur;
+               Fk = -ur*(1/(norm(Por)^4) );
+               Ft = b * kd1* norm(Fk) + kd2* Fk + b1 * kd3*norm(Fk);
+               a = Ft/m;
+               vf = v + a *dt;
+               Ca = vf;
+               
+               
+           else
+              % collision 2
+              
+              
+                Po = Obs;
                nrg = (hd - hq)/ norm(hd - hq);
                nv = (H(:,i) - H(:,i-1))/ norm(H(:,i) - H(:,i-1));
                nro = (Po - hq)/norm(Po - hq);
@@ -115,88 +145,29 @@ for i=2:1:1000
                ur = Por/norm(Por);
                Fd = -damp*(v'*ur)*ur;
                Fk = -ur*(1/(norm(Por)^4) );
-               Ft = b * kd1* norm(Fk) + kd2* Fk + b1 * kd3*norm(Fk);
+               Ft = kd2* Fk ;
                a = Ft/m;
                vf = v + a *dt;
                Ca = vf;
                
-               ba = b;
-               Poa = Po;
                
-           else
-               
-               % no collision
-
+              
            end
-          
-            
-        else
-           
-            
-           for i_aux = 1:1:length(nmin)
-
-
-               Obs = [x(nmin((i_aux)));y(nmin((i_aux)));z(nmin((i_aux)))];
-               Por = Obs - hq;
-               Pgr = hd - hq;
-               nv = (H(:,i) - H(:,i-1))/ norm(H(:,i) - H(:,i-1));
-               Ang = acos(dot(  Por , Pgr ) / (norm(Por)*norm(Pgr)))
-
-
-               if Ang < 90*pi/180
-                  %new collision
-                   obstacle = 1;
-                   Po = Obs;
-                   nrg = (hd - hq)/ norm(hd - hq);
-                   nv = (H(:,i) - H(:,i-1))/ norm(H(:,i) - H(:,i-1));
-                   nro = (Po - hq)/norm(Po - hq);
-                   a = cross(nro,nv);
-                   b = cross(a , nro);
-                   a1 = cross(nro,nrg);
-                   b1 = cross(a1 , nro);
-                   
-                   
-                   Angb = acos(dot(  b , ba ) / (norm(b)*norm(ba)));
-                   
-                   if Angb > 90*pi/180
-                         b = cross(nro , a );
-                   end
-        
-                   v = (H(:,i) - H(:,i-1))/dt ;
-                   ur = Por/norm(Por);
-                   Fd = -damp*(v'*ur)*ur;
-                   Fk = -ur*(1/(norm(Por)^4) );
-                   Ft = b * kd1*norm(Fk) + kd2*Fk + b1 * kd3*norm(Fk);
-                   a = Ft/m;
-                   vf = v + a *dt;
-                   Ca = Ca + vf;
-
-
-               end
-               
-           end  
-           
-           
-           ba = b;
-        
-           Poa = Po;
         end
+        Ctotal = ((1- exp(-tau*norm(dmin)))*Ct +  exp(-tau*norm(dmin))*Ca);
+    else 
+        dmin= 0;
+        obstacle = 0;
+        Ctotal = Ct;
         
-        
-    else
-        % no colision 
-        
-        if obstacle == 1
-           obstacle = 0; 
-        end
     end
-    
-    plot3(H(1,:),H(2,:),H(3,:))
-plot3(x,y,z,'o')
 
     
+    
+
+
    
-        C = J.'*(Ct + Ca);
+        C = J.'*(Ctotal);
         for ia = 1:1:7
             if C(ia,1) >= Vmax(ia)
                 C(ia,1) = Vmax(ia);
@@ -213,39 +184,18 @@ end
 
 %%
 
-pointL = [0.4716;0.315;1.04];
+     
+     pointL = [0.4716;0.315;1.04];
 figure(1) 
 hold on 
 grid on
 plot3(H(1,:),H(2,:),H(3,:))
 plot3(x,y,z,'o')
-%%
 
-t = linspace(0,10,length(eh(1,:)));
 figure(2)
-title('Trajectory Error')
-subplot(2,2,1); plot(t,eh(1,:)); 
-
-title('Trajectory Error in x axis')
-grid on
-xlabel('time [s]')
-ylabel(' x axis [m]')
-subplot(2,2,2); plot(t,eh(2,:));
-title('Trajectory Error in y axis')
-grid on
-xlabel('time [s]')
-ylabel(' y axis [m]')
-subplot(2,2,3); plot(t,eh(3,:));
-grid on
-xlabel('time [s]')
-ylabel(' z axis [m]')
-title('Trajectory Error in z axis')
-
-subplot(2,2,4); plot(t,sqrt(eh(3,:).^2+eh(2,:).^2+eh(1,:).^2));
-grid on
-xlabel('time [s]')
-ylabel('[m]')
-title('Absolute error')
+subplot(1,3,1); plot(eh(1,:));
+subplot(1,3,2); plot(eh(2,:));
+subplot(1,3,3); plot(eh(3,:));
 
 figure(3)
 subplot(1,3,1); plot(H(1,:));

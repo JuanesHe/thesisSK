@@ -230,7 +230,8 @@ hold on
 exampleHelperPlotCupAndTable(cupHeight, cupRadius, cupPosition);
 plot3(pointL(1,1),pointL(2,1),pointL(3,1),'o')
 plot3(H(1,:),H(2,:),H(3,:))
-plot3(x,y,z,'o')
+plot3(pointLa(1,1),pointLa(2,1),pointLa(3,1),'o')
+plot3(hd(1,1),hd(2,1),hd(3,1),'o')
 
 %%
 framerate = 100;
