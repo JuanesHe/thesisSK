@@ -4,9 +4,9 @@ import sys
 import urx
 
 #calibration values
-xo = -0.007
-yo = 0
-zo = 0.217
+xo = 0.012
+yo = 0.01
+zo = 0.211
 
 rob = urx.Robot("192.168.88.249")
 

@@ -77,7 +77,7 @@ if interval:
 
     T = 0.1
     k = 1;
-    m = 5;
+    m = 10
     d = 2;
     P = np.array([0,0,0]).reshape(3,1);
     rno = np.concatenate((x, y, z ), axis=0).reshape(3,45)
@@ -121,10 +121,10 @@ if interval:
             print('Punto actual',P)
             Po = np.zeros((3,1));   
             Po[0,0] = float(x_refr)
-            if (Po[0,0] > -0.27):
-                Po[0,0] = -0.3
-            if (Po[0,0] < -0.44):
-                Po[0,0] = -0.44
+            if (Po[0,0] < 0.27):
+                Po[0,0] = 0.27
+            if (Po[0,0] > 0.44):
+                Po[0,0] = 0.44
                 
             Po[1,0] = float(y_refr)
             if (Po[1,0] > 0.25):
@@ -176,11 +176,10 @@ if interval:
                 vz1=-0.2;
             
             
-            time.sleep(0.1)
+            
             
             rob.speedl((vx1 , vy1, vz1 , 0, 0, 0), acc=0.3, min_time=3);
-        except:
-            rob.close()
+            time.sleep(0.15)
 
-        
-
+        except: 
+            print('error')
