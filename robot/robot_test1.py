@@ -4,12 +4,24 @@ import sys
 import urx
 import numpy as np
 import keyboard
+import json
+
 
 #calibration values
 xo = -0.007
 yo = 0
 zo = 0.217
 
+try :
+    with open('data.json', 'r') as fa:
+        data = json.load(fa)
+        T = data['person']['T']
+        k = data['person']['k']
+        m = data['person']['m']
+        d = data['person']['d']
+except:
+    print('file error')
+    interval = False  
 
 
 v = triad_openvr.triad_openvr()
@@ -46,7 +58,7 @@ if interval:
 
     #Controller
 
-    r = 10
+    r = 5
     phi = np.linspace(0,2*np.pi,9)
     teta = np.linspace(0,np.pi,5)
 
@@ -75,19 +87,21 @@ if interval:
     z = np.array(z.reshape(45,1))
 
 
-    T = 0.1
-    k = 1;
-    m = 10
-    d = 2;
+
     P = np.array([0,0,0]).reshape(3,1);
     rno = np.concatenate((x, y, z ), axis=0).reshape(3,45)
     V = np.array([0,0,0]).reshape(3,1)
     Po = np.array([2,2,10]).reshape(3,1);
     ro = np.array([2,2,0]).reshape(3,1);
     rn = rno + Po
+    Pa = np.zeros((3,1));
 
-    while not keyboard.is_pressed('q'):
+    while True:
         try:
+            if keyboard.is_pressed('q'):  # if key 'q' is pressed 
+                print('You Pressed A Key!')
+                break  # finishing the loop
+
             [x,y,z,yaw,pitch,roll] = v.devices["tracker_1"].get_pose_euler();
             [x1,y1,z1,yaw1,pitch1,roll1] = v.devices["tracker_2"].get_pose_euler();
             pos_x = x1 - x 
@@ -113,10 +127,15 @@ if interval:
             xn = float(pose[0])
             yn = float(pose[1])
             zn = float(pose[2])
+
+
             P = np.zeros((3,1));
             P[0,0] = float(xn)
             P[1,0] = float(yn)
             P[2,0] = float(zn)
+
+            Va = P - Pa 
+            Pa = P
             
             print('Punto actual',P)
             Po = np.zeros((3,1));   
@@ -145,6 +164,18 @@ if interval:
             rf = P - rn 
             dr = P - Po
             
+            try :
+                with open('data.json', 'r') as fa:
+                    data = json.load(fa)
+                    T = data['person']['T']
+                    k = data['person']['k']
+                    m = data['person']['m']
+                    d = data['person']['d']
+                    vmax = data['person']['vmax']
+            except:
+                print('file error')
+ 
+
             mrf = np.sqrt(np.power(rf[0,:],2) + np.power(rf[1,:],2) + np.power(rf[2,:],2) );
             urf = rf/mrf
             Fk = (-k)*urf*(np.dot(dr.reshape(1,3),urf))
@@ -152,34 +183,53 @@ if interval:
             a = np.sum(Fk+Fd, axis=1) /m
             a.resize(3,1)
             V = a*T + V    
-            print ('velocidad',V)          
+            #print ('velocidad',V)          
 
             
             vx1 = V[0,0]
             vy1 = V[1,0]
             vz1 = V[2,0]
             
-            if (vx1>0.2):
-                vx1=0.2;
-            elif (vx1<-0.2):
-                vx1=-0.2;
+            if (vx1 > vmax):
+                vx1 = vmax;
+            elif (vx1 < -vmax):
+                vx1 = -vmax;
 
-            if (vy1>0.2):
-                vy1=0.2;
-            elif (vy1<-0.2):
-                vy1=-0.2;
+            if (vy1 > vmax):
+                vy1 = vmax;
+            elif (vy1 < -vmax):
+                vy1 = -vmax;
 
-            if (vz1>0.2):
+            if (vz1 > vmax):
+                vz1 = vmax;
+            elif (vz1 < -vmax):
+                vz1 = -vmax;
 
-                vz1=0.2;
-            elif (vz1<-0.2):
-                vz1=-0.2;
-            
-            
-            
-            
+
+            V[0,0] = vx1
+            V[1,0] = vy1
+            V[2,0] = vz1
+
+            print ('velocidad',vx1,vy1,vz1) 
             rob.speedl((vx1 , vy1, vz1 , 0, 0, 0), acc=0.3, min_time=3);
             time.sleep(0.15)
 
+        except KeyboardInterrupt: 
+            print('error finalizing')
+            try:
+                rob.stopl()
+            except:
+                print('No')
         except: 
             print('error')
+            try:
+                rob.stopl()
+            except:
+                print('No')
+
+else:
+    print('finishing')
+    try:
+        rob.stopl()
+    except:
+        print('No')
