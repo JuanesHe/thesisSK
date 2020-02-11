@@ -221,7 +221,7 @@ plot3(H(1,:),H(2,:),H(3,:))
 plot3(x,y,z,'o')
 %%
 
-t = linspace(0,10,length(eh(1,:)));
+t = linspace(0,5,length(eh(1,:)));
 figure(2)
 title('Trajectory Error')
 subplot(2,2,1); plot(t,eh(1,:)); 
