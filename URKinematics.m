@@ -222,8 +222,9 @@ wz6 = eval(wz);
 
 Jw1 = [wx1, wx2, wx3, wx4, wx5, wx6; ...
     wy1, wy2, wy3, wy4, wy5, wy6; ...
-    wz1, wz2, wz3, wz4, wz5, wz6]
-    
+    wz1, wz2, wz3, wz4, wz5, wz6];
+
+JA = [JA;Jw1];
  
 %% Save the Jacobian, matrix and end efector position
 

@@ -17,8 +17,8 @@ q6 = q(6);
 hq = eval(h);
 hd = [-0.3;-0.2;0.1];
 hdp = 0;
-k1 = [0.5;0.5;0.5];
-k2 = [0.5;0.5;0.5]
+k1 = [1;1;1];
+k2 = [1;1;1]
 lamda = 0.01;
 pointL = [1.4716;1.315;1.04];
 pointL = zeros(3,1);
@@ -47,13 +47,13 @@ for i=2:1:500
     hv = k1 .* tanh(k2 .* eh(:,i));
     JA1 = eval(JA);
     JA1 = JA1';
-    J1 = JA1.' * JA1 + lamda*eye(3);
+    J1 = JA1.' * JA1 + lamda*eye(6);
     J2 = inv(J1);
     J = J2 * JA1.' ;
     s = hdp + hv;
     %Jinv = pinv(JA1)
 
-
+    s = [s;0;0;0];
 
 
     C = J.' * s;
