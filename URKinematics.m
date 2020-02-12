@@ -1,7 +1,7 @@
 %% Juan Heredia
 %% Skoltech 2020
 %% File used to calculate the Kinematics and Jacobian
-%% KUKA IIWA LBR 7kg R800
+%% UR3
 
 clc
 clear all
@@ -122,6 +122,111 @@ q6 = q(6);
 
 eval(h)
 
+
+%% Rotational
+
+R= T(1:1:3,1:1:3);
+
+syms dq1 dq2 dq3 dq4 dq5 dq6
+syms q1 q2 q3 q4 q5 q6
+qe=[q1 q2 q3 q4 q5 q6]; 
+dq = [dq1 dq2 dq3 dq4 dq5 dq6]; 
+dR = zeros(3,3);
+for j=1:6
+    dR = dR + diff(R,qe(j)).*dq(j);
+end
+
+
+W = simplify(expand(simplify(dR*R.')));
+wx = W(3,2);
+wy = W(1,3);
+wz = W(2,1);
+
+syms dq1 dq2 dq3 dq4 dq5 dq6
+
+dq1 = 1;
+dq2 = 0;
+dq3 = 0;
+dq4 = 0;
+dq5 = 0;
+dq6 = 0;
+
+wx1 = eval(wx);
+wy1 = eval(wy);
+wz1 = eval(wz);
+
+syms dq1 dq2 dq3 dq4 dq5 dq6
+
+dq1 = 0;
+dq2 = 1;
+dq3 = 0;
+dq4 = 0;
+dq5 = 0;
+dq6 = 0;
+
+wx2 = eval(wx);
+wy2 = eval(wy);
+wz2 = eval(wz);
+
+syms dq1 dq2 dq3 dq4 dq5 dq6
+
+dq1 = 0;
+dq2 = 0;
+dq3 = 1;
+dq4 = 0;
+dq5 = 0;
+dq6 = 0;
+
+wx3 = eval(wx);
+wy3 = eval(wy);
+wz3 = eval(wz);
+
+syms dq1 dq2 dq3 dq4 dq5 dq6
+
+dq1 = 0;
+dq2 = 0;
+dq3 = 0;
+dq4 = 1;
+dq5 = 0;
+dq6 = 0;
+
+wx4 = eval(wx);
+wy4 = eval(wy);
+wz4 = eval(wz);
+
+syms dq1 dq2 dq3 dq4 dq5 dq6
+
+dq1 = 0;
+dq2 = 0;
+dq3 = 0;
+dq4 = 0;
+dq5 = 1;
+dq6 = 0;
+
+wx5 = eval(wx);
+wy5 = eval(wy);
+wz5 = eval(wz);
+
+syms dq1 dq2 dq3 dq4 dq5 dq6
+
+dq1 = 0;
+dq2 = 0;
+dq3 = 0;
+dq4 = 0;
+dq5 = 0;
+dq6 = 1;
+
+wx6 = eval(wx);
+wy6 = eval(wy);
+wz6 = eval(wz);
+
+Jw1 = [wx1, wx2, wx3, wx4, wx5, wx6; ...
+    wy1, wy2, wy3, wy4, wy5, wy6; ...
+    wz1, wz2, wz3, wz4, wz5, wz6]
+    
+ 
 %% Save the Jacobian, matrix and end efector position
 
+
 save('KinematicsUR.mat','JA','T','h')
+
