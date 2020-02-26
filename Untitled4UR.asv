@@ -98,11 +98,11 @@ hq = eval(h);
 hd = [-0.3;-0.2;0.1];
 hdp = 0;
 k1 = [1;1;1];
-k2 = [1;1;1];
+k2 = [1;1;1]
 lamda = 0.01;
 
-lamdacontroller = 1;
-k1s = 0.5;
+lamdacontroller = 2
+k1s = 1
 
 pointL = [1.4716;1.315;1.04];
 pointL = zeros(3,1);
@@ -128,8 +128,8 @@ for i=2:1:500
     hq = eval(h);
     H(:,i) = hq; 
     eh(:,i) = hd - hq;
-    s(:,i-1) = (eh(:,i)-eh(:,i-1))/dt +lamdacontroller*eh(:,i);
-    U = k1 .* tanh(k2 .* eh(:,i)) + k1s*s(:,i-1)/(norm(s(:,i-1))+0.5);
+    s = (eh(:,i)-eh(:,i-1))/dt +lamdacontroller*eh(:,i);
+    U = lamdacontroller*eh(:,i) + k1s*s/(norm(s)+0.1);
 
     JA1 = eval(JA);
     JA1 = JA1';
@@ -139,10 +139,10 @@ for i=2:1:500
 
     %Jinv = pinv(JA1)
 
-    a = [U;0;0;0];
+    s = [U;0;0;0];
 
 
-    C = J.' * a;
+    C = J.' * s;
     q = q + 0.1*C.';
     Q(i,:) = q;
 end
@@ -162,7 +162,7 @@ figure(3)
 hold on 
 grid on
 plot3(H(1,:),H(2,:),H(3,:))
-plot3(hd(1,1),hd(2,1),hd(3,1),'o')%%
+plot3(pointL(1,1),pointL(2,1),pointL(3,1),'o')%%
 
 
 %%
