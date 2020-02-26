@@ -17,7 +17,7 @@ if interval:
     while(True):
         start = time.time()
         txt = ""
-        for each in v.devices["tracker_1"].get_pose_euler():
+        for each in v.devices["controller_1"].get_pose_euler():
             txt += "%.4f" % each
             txt += " "
         print("\r" + txt, end="")

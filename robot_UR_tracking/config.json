@@ -1,0 +1,39 @@
+{
+    "devices":[
+        {
+          "name": "tracking_reference_0",
+          "type": "Tracking Reference",
+          "serial":"LHB-6F2F8631"
+        },
+        {
+          "name": "tracking_reference_1",
+          "type": "Tracking Reference",
+          "serial":"LHB-C4B9F64D"
+        },
+        {
+          "name": "controller_0",
+          "type": "Controller",
+          "serial":"LHR-FD53DF40"
+        },
+        {
+          "name": "controller_1",
+          "type": "Controller",
+          "serial":"LHR-FF6D7B44"
+        },
+        {
+          "name": "tracker_0",
+          "type": "Tracker",
+          "serial":"LHR-3CD1A9DA"
+        },
+        {
+          "name": "tracker_1",
+          "type": "Tracker",
+          "serial":"LHR-25865D81"
+        },
+        {
+          "name": "tracker_2",
+          "type": "Tracker",
+          "serial":"LHR-4359D2B6"
+        }
+    ]
+}
